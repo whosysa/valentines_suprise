@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valentines 💖</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  font-family:'Patrick Hand', cursive;
+  background:linear-gradient(135deg,#ff6f91,#ff9a9e);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.card{
+  background:white;
+  width:90%;
+  max-width:380px;
+  padding:20px;
+  border-radius:25px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.grid img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:12px;
+}
+
+.slots{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.slot{
+  width:32px;
+  height:38px;
+  border-bottom:3px solid #d63447;
+  font-size:22px;
+  color:#d63447;
+}
+
+.letters{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:8px;
+}
+
+.letter-btn{
+  width:38px;
+  height:38px;
+  border:none;
+  border-radius:10px;
+  background:#ff4f7a;
+  color:white;
+  font-size:18px;
+}
+
+#resetBtn, #musicBtn{
+  margin-top:10px;
+  padding:8px 16px;
+  border:none;
+  border-radius:20px;
+}
+
+#resetBtn{background:#ffd1dc;}
+#musicBtn{background:#ffe6f0;}
+
+.shake{
+  animation:shake .4s;
+}
+
+@keyframes shake{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-5px)}
+  50%{transform:translateX(5px)}
+  75%{transform:translateX(-5px)}
+  100%{transform:translateX(0)}
+}
+
+h1{color:#d63447;font-size:20px;}
+
+.letter-photo{
+  width:100%;
+  border-radius:15px;
+  margin-bottom:15px;
+}
+</style>
+</head>
+
+<body>
+
+<audio id="bgMusic" src="music.mp3" loop></audio>
+<audio id="click" src="click.mp3"></audio>
+<audio id="wrong" src="wrong.mp3"></audio>
+<audio id="correct" src="correct.mp3"></audio>
+
+<div class="card">
+  <h1 id="text">hi, Luke Aristorenas 💖</h1>
+  <button id="startBtn" onclick="startGame()">are you ready? ❤️</button>
+
+  <div id="photoGrid" class="grid" style="display:none"></div>
+  <div id="slots" class="slots"></div>
+  <div id="letters" class="letters"></div>
+
+  <button id="resetBtn" onclick="resetPuzzle()" style="display:none">reset 🔄</button>
+  <button id="musicBtn" onclick="toggleMusic()" style="display:none">🎵 music on/off</button>
+
+  <img id="letterPhoto" class="letter-photo" style="display:none">
+</div>
+
+<script>
+const puzzles=[
+ {answer:"handsome",photos:["puzzle1_1.jpg","puzzle1_2.jpg","puzzle1_3.jpg","puzzle1_4.jpg"]},
+ {answer:"love",photos:["puzzle2_1.jpg","puzzle2_2.jpg","puzzle2_3.jpg","puzzle2_4.jpg"]},
+ {answer:"valentines",photos:["puzzle3_1.jpg","puzzle3_2.jpg","puzzle3_3.jpg","puzzle3_4.jpg"]}
+];
+
+const letterTexts=[
+ "happy valentines 🤍",
+ "i made this just for you",
+ "thank you for loving me gently",
+ "you make my heart race every day",
+ "wait for me 🤍"
+];
+
+const letterPhotos=["letter1.jpg","letter2.jpg","letter3.jpg"];
+
+let puzzleIndex=0;
+let slotIndex=0;
+let letterIndex=0;
+
+const grid=document.getElementById("photoGrid");
+const slots=document.getElementById("slots");
+const letters=document.getElementById("letters");
+const text=document.getElementById("text");
+const resetBtn=document.getElementById("resetBtn");
+const musicBtn=document.getElementById("musicBtn");
+const startBtn=document.getElementById("startBtn");
+const letterPhoto=document.getElementById("letterPhoto");
+
+const bgMusic=document.getElementById("bgMusic");
+const click=document.getElementById("click");
+const wrong=document.getElementById("wrong");
+const correct=document.getElementById("correct");
+
+function startGame(){
+ startBtn.style.display="none";
+ resetBtn.style.display="block";
+ musicBtn.style.display="block";
+ bgMusic.play().catch(e=>console.log("music play blocked, tap the button")); 
+ loadPuzzle();
+}
+
+function loadPuzzle(){
+ const p=puzzles[puzzleIndex];
+ grid.style.display="grid";
+ grid.innerHTML="";
+ slots.innerHTML="";
+ letters.innerHTML="";
+ slotIndex=0;
+
+ p.photos.forEach(src=>{
+  const img=document.createElement("img");
+  img.src=src;
+  grid.appendChild(img);
+ });
+
+ for(let i=0;i<p.answer.length;i++){
+  slots.innerHTML+=`<div class="slot"></div>`;
+ }
+
+ let chars=p.answer.toUpperCase().split("").concat(["A","E","I","O","R","L"]);
+ chars.sort(()=>Math.random()-0.5);
+
+ chars.forEach(ch=>{
+  const b=document.createElement("button");
+  b.className="letter-btn";
+  b.innerText=ch;
+  b.onclick=()=>pickLetter(ch,b);
+  letters.appendChild(b);
+ });
+}
+
+function pickLetter(letter,btn){
+ click.play();
+ if(slotIndex>=slots.children.length) return;
+
+ slots.children[slotIndex].innerText=letter;
+ btn.disabled=true;
+ slotIndex++;
+
+ if(slotIndex===slots.children.length){
+  let formed="";
+  for(let s of slots.children) formed+=s.innerText;
+
+  if(formed.toLowerCase()===puzzles[puzzleIndex].answer){
+   correct.play();
+   puzzleIndex++;
+   setTimeout(()=>puzzleIndex<puzzles.length?loadPuzzle():startLetter(),700);
+  }else{
+   wrong.play();
+   slots.classList.add("shake");
+   setTimeout(()=>{slots.classList.remove("shake");resetPuzzle();},500);
+  }
+ }
+}
+
+function resetPuzzle(){
+ loadPuzzle();
+}
+
+function startLetter(){
+ grid.style.display="none";
+ slots.style.display="none";
+ letters.style.display="none";
+ resetBtn.style.display="none";
+ showLetter();
+}
+
+function showLetter(){
+ if(letterIndex>=letterTexts.length) return;
+
+ text.innerText=letterTexts[letterIndex];
+
+ if(letterIndex<letterPhotos.length){
+  letterPhoto.src=letterPhotos[letterIndex];
+  letterPhoto.style.display="block";
+ }else{
+  letterPhoto.style.display="none";
+ }
+
+ letterIndex++;
+ setTimeout(showLetter,2500);
+}
+
+function toggleMusic(){
+ if(bgMusic.paused){
+   bgMusic.play();
+   musicBtn.innerText="🎵 music on";
+ }else{
+   bgMusic.pause();
+   musicBtn.innerText="🎵 music off";
+ }
+}
+</script>
+</body>
+</html>
